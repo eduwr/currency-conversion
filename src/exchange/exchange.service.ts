@@ -1,12 +1,7 @@
 import { BadRequestException, Injectable, Inject } from '@nestjs/common';
 import { ExchangeInputType } from './types/exchange-input.type';
 import { ExchangeType } from './types/exchange.type';
-
-export class CurrenciesService {
-  async getCurrency(currency: string): Promise<any> {
-    // mock
-  }
-}
+import { CurrenciesService } from '../currencies/currencies.service';
 
 @Injectable()
 export class ExchangeService {
