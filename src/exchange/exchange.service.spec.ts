@@ -41,19 +41,13 @@ describe('ExchangeService', () => {
 
     it('getCurrency should be called twice', async () => {
       await service.convertAmount({ from: 'USD', to: 'BRL', amount: 1 }),
-        await expect(currenciesService.getCurrency).toBeCalledTimes(2);
+        expect(currenciesService.getCurrency).toBeCalledTimes(2);
     });
 
     it('getCurrency should be called with correct params', async () => {
       await service.convertAmount({ from: 'USD', to: 'BRL', amount: 1 });
-      await expect(currenciesService.getCurrency).toHaveBeenNthCalledWith(
-        1,
-        'USD',
-      );
-      await expect(currenciesService.getCurrency).toHaveBeenNthCalledWith(
-        2,
-        'BRL',
-      );
+      expect(currenciesService.getCurrency).toHaveBeenNthCalledWith(1, 'USD');
+      expect(currenciesService.getCurrency).toHaveBeenNthCalledWith(2, 'BRL');
     });
 
     it('should be thrown when getCurrency throw', async () => {
