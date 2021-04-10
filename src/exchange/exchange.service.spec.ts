@@ -24,7 +24,7 @@ describe('ExchangeService', () => {
       ).rejects.toThrow(new BadRequestException());
     });
 
-    it('should be not throw if called with valid params', async () => {
+    it('should not throw if called with valid params', async () => {
       await expect(
         service.convertAmount({ from: 'USD', to: 'BRL', amount: 1 }),
       ).resolves.not.toThrow();
