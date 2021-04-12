@@ -1,24 +1,38 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CurrenciesRepository, CurrenciesService } from './currencies.service';
-import { InternalServerErrorException } from '@nestjs/common';
+import {
+  Currencies,
+  CurrenciesRepository,
+  CurrenciesService,
+} from './currencies.service';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 describe('CurrenciesService', () => {
   let service: CurrenciesService;
   let repository: CurrenciesRepository;
+  let mockData: Currencies;
 
   beforeEach(async () => {
+    const currenciesRepositoryMock = {
+      getCurrency: jest.fn(),
+      createCurrency: jest.fn(),
+      updateCurrency: jest.fn(),
+    };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CurrenciesService,
         {
           provide: CurrenciesRepository,
-          useFactory: () => ({ getCurrency: jest.fn() }),
+          useFactory: () => currenciesRepositoryMock,
         },
       ],
     }).compile();
 
     service = module.get<CurrenciesService>(CurrenciesService);
     repository = module.get<CurrenciesRepository>(CurrenciesRepository);
+    mockData = { currency: 'USD', value: 1 };
   });
 
   it('should be defined', () => {
@@ -37,6 +51,72 @@ describe('CurrenciesService', () => {
 
     it('Should not throw an error if repository returns', async () => {
       await expect(service.getCurrency('USD')).resolves.not.toThrow();
+    });
+
+    it('Should call repository with correct params', async () => {
+      await service.getCurrency('USD');
+
+      expect(repository.getCurrency).toBeCalledWith('USD');
+    });
+
+    it('Should returns when repository returns', async () => {
+      (repository.getCurrency as jest.Mock).mockReturnValue(mockData);
+      expect(await service.getCurrency('USD')).toEqual(mockData);
+    });
+  });
+
+  describe('createCurrency()', () => {
+    it('Should throw an error if repository throws', async () => {
+      (repository.createCurrency as jest.Mock).mockRejectedValue(
+        new InternalServerErrorException(),
+      );
+      mockData.currency = 'INVALID';
+      await expect(service.createCurrency(mockData)).rejects.toThrow(
+        new InternalServerErrorException(),
+      );
+    });
+
+    it('Should not throw an error if repository returns', async () => {
+      await expect(service.createCurrency(mockData)).resolves.not.toThrow();
+    });
+
+    it('Should call repository with correct params', async () => {
+      await service.createCurrency(mockData);
+
+      expect(repository.createCurrency).toBeCalledWith(mockData);
+    });
+
+    it('Should throw if value <= 0', async () => {
+      mockData.value = 0;
+      await expect(service.createCurrency(mockData)).rejects.toThrow(
+        new BadRequestException('Value must be greater than zero'),
+      );
+    });
+
+    it('Should returns when repository returns', async () => {
+      (repository.createCurrency as jest.Mock).mockReturnValue(mockData);
+      expect(await service.createCurrency(mockData)).toEqual(mockData);
+    });
+  });
+  describe('updateCurrency()', () => {
+    it('Should throw an error if repository throws', async () => {
+      (repository.updateCurrency as jest.Mock).mockRejectedValue(
+        new InternalServerErrorException(),
+      );
+      mockData.currency = 'INVALID';
+      await expect(service.updateCurrency(mockData)).rejects.toThrow(
+        new InternalServerErrorException(),
+      );
+    });
+
+    it('Should not throw an error if repository returns', async () => {
+      await expect(service.updateCurrency(mockData)).resolves.not.toThrow();
+    });
+
+    it('Should call repository with correct params', async () => {
+      await service.updateCurrency(mockData);
+
+      expect(repository.updateCurrency).toBeCalledWith(mockData);
     });
   });
 });
