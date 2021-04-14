@@ -17,6 +17,7 @@ describe('CurrenciesRepository', () => {
     repository = module.get<CurrenciesRepository>(CurrenciesRepository);
     mockData = { currency: 'USD', value: 1 } as Currencies;
     repository.save = jest.fn();
+    repository.delete = jest.fn();
   });
 
   it('Repository should be defined', () => {
@@ -114,6 +115,35 @@ describe('CurrenciesRepository', () => {
         value: 2,
       });
       expect(result).toEqual({ currency: 'USD', value: 2 });
+    });
+  });
+
+  describe('deleteCurrency()', () => {
+    it('Should be called findOne with correct params', async () => {
+      repository.findOne = jest.fn().mockReturnValue(mockData);
+      await repository.deleteCurrency('USD');
+      expect(repository.findOne).toBeCalledWith({ currency: 'USD' });
+    });
+
+    it('Should be thrown findOne returns empty', async () => {
+      repository.findOne = jest.fn().mockReturnValue(undefined);
+      await expect(repository.deleteCurrency('USD')).rejects.toThrow(
+        new NotFoundException(`The currency USD was not found!`),
+      );
+    });
+
+    it('Should be called delete with correct params ', async () => {
+      repository.findOne = jest.fn().mockReturnValue(mockData);
+      repository.delete = jest.fn().mockReturnValue({});
+      await repository.deleteCurrency('USD');
+      expect(repository.delete).toBeCalledWith({ currency: 'USD' });
+    });
+
+    it('Should be thrown if delete throws', async () => {
+      repository.findOne = jest.fn().mockReturnValue(mockData);
+      repository.delete = jest.fn().mockRejectedValue(new Error());
+
+      await expect(repository.deleteCurrency('USD')).rejects.toThrow();
     });
   });
 });
