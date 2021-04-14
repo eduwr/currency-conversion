@@ -1,12 +1,12 @@
 import { Currencies } from './currencies.entity';
 import { EntityRepository, Repository } from 'typeorm';
 import {
-  BadRequestException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 
-type CuurrenciesDto = Omit<Currencies, 'createdAt' | 'updatedAt' | '_id'>;
+import { CurrenciesInputType } from './types/currencies-input.type';
+import { validateOrReject } from 'class-validator';
 
 @EntityRepository(Currencies)
 export class CurrenciesRepository extends Repository<Currencies> {
@@ -21,16 +21,44 @@ export class CurrenciesRepository extends Repository<Currencies> {
   }
 
   async createCurrency({
-    currency,
+    currency: currencyInput,
     value,
-  }: CuurrenciesDto): Promise<Currencies> {
-    return new Currencies();
+  }: CurrenciesInputType): Promise<Currencies> {
+    const currency = new Currencies();
+
+    currency.value = value;
+    currency.currency = currencyInput;
+
+    try {
+      await validateOrReject(currency);
+
+      await this.save(currency);
+    } catch (err) {
+      throw new InternalServerErrorException(err);
+    }
+
+    return currency;
   }
-  async updateCurrency({
-    currency,
-    value,
-  }: CuurrenciesDto): Promise<Currencies> {
-    return new Currencies();
+  async updateCurrency(
+    currenciesInput: CurrenciesInputType,
+  ): Promise<Currencies> {
+    const currencyFound = await this.findOne({
+      currency: currenciesInput.currency,
+    });
+    if (!currencyFound) {
+      throw new NotFoundException(
+        `The currency ${currenciesInput.currency} was not found!`,
+      );
+    }
+
+    try {
+      currencyFound.value = currenciesInput.value;
+      await this.save(currencyFound);
+    } catch (err) {
+      throw new InternalServerErrorException();
+    }
+
+    return currencyFound;
   }
 
   async deleteCurrency(currency: string): Promise<void> {
