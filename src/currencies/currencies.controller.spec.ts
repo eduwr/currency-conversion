@@ -17,6 +17,8 @@ describe('CurrenciesController', () => {
           useFactory: () => ({
             getCurrency: jest.fn(),
             createCurrency: jest.fn(),
+            deleteCurrency: jest.fn(),
+            updateCurrency: jest.fn(),
           }),
         },
       ],
@@ -70,6 +72,46 @@ describe('CurrenciesController', () => {
     it('should be returns when service returns', async () => {
       service.createCurrency = jest.fn().mockReturnValue(mockData);
       expect(await controller.createCurrency(mockData)).toEqual(mockData);
+    });
+  });
+
+  describe('deleteCurrency()', () => {
+    it('should be throw when service throws', async () => {
+      service.deleteCurrency = jest
+        .fn()
+        .mockRejectedValue(new BadRequestException());
+      await expect(controller.deleteCurrency('USD')).rejects.toThrow(
+        new BadRequestException(),
+      );
+    });
+
+    it('should be called service with correct params', async () => {
+      await controller.deleteCurrency('USD');
+      expect(service.deleteCurrency).toBeCalledWith('USD');
+    });
+  });
+
+  describe('updateCurrency()', () => {
+    it('should be throw when service throws', async () => {
+      service.updateCurrency = jest
+        .fn()
+        .mockRejectedValue(new BadRequestException());
+      await expect(controller.updateCurrency('USD', 1)).rejects.toThrow(
+        new BadRequestException(),
+      );
+    });
+
+    it('should be called service with correct params', async () => {
+      await controller.updateCurrency('USD', 1);
+      expect(service.updateCurrency).toBeCalledWith({
+        currency: 'USD',
+        value: 1,
+      });
+    });
+
+    it('should be returns when service returns', async () => {
+      service.updateCurrency = jest.fn().mockReturnValue(mockData);
+      expect(await controller.updateCurrency('USD', 1)).toEqual(mockData);
     });
   });
 });
